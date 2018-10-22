@@ -1,27 +1,31 @@
 #coding=utf-8
-#Ver3.2.2
 import docx
 import os
 import requests
 import time
+import Tkinter
 from bs4 import BeautifulSoup
 from docx.shared import Inches
-from PIL import Image
+from PIL import Image, ImageTk
+from tkinter import messagebox
+
+# try:
+#     # python 2.x
+#     import Tkinter as tk
+# except ImportError:
+#     # python 3.x
+#     import tkinter as tk
 
 # header資訊
 headers = {'user-agent': 'Mozilla/5.0 (Macintosh Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'}
 
 # exhentai需要的cookies
-'''
-請自己去Chrome看cookies的內容
-再填入對應的位置即可
-'''
 exhentai_cookies = {
-  'ipb_member_id' : '',
-  'ipb_pass_hash' : '',
-  'igneous' : '',
-  's' : '',
-  'lv' : '',
+  'ipb_member_id' : '3269633',
+  'ipb_pass_hash' : '7cc9941d5589a4c0be88c766c5cc4e11',
+  'igneous' : '1540e4cb1',
+  's' : 'e30d0ff5a',
+  'lv' : '1537947013-1537950968',
 }
 
 ptt_cookies = {'over18' : '1'}
@@ -56,7 +60,7 @@ def exhentai_model(url):
 			for a in ex_page[5].split():
 				ex_page[5] = a
 				break
-			print u'---------開始下載圖片---------'
+			text_update('開始下載圖片\n')
 			page_id = int(ex_page[5])/40
 
 		title = soup.select('.gm > #gd2 > #gj')
@@ -82,10 +86,10 @@ def exhentai_model(url):
 
 
 			if ex_image_url_count > 9:
-				print u'--------總共 %d 張圖片--------' %ex_image_url_count
+				text_update('總共 %d 張圖片\n' %ex_image_url_count)
 			else:
-				print u'--------總共 %d 張圖片---------' %ex_image_url_count
-			print u'---------圖片下載完成---------'
+				text_update('總共 %d 張圖片\n' %ex_image_url_count)
+			text_update('圖片下載完成\n')
 
 # 取得exhentai圖片網址
 def exhentai_image_url(imageurl):
@@ -112,9 +116,9 @@ def exhentai_image_download(galleryurl):
 	with open(ex_title[0] + '/' + filename, 'wb') as code:
 		code.write(imgcontent)  
 		if ex_image_url_count > 9:
-			print u'-------第 %d 張圖片下載-------' %ex_image_url_count
+			text_update('第 %d 張圖片下載\n' %ex_image_url_count)
 		else:
-			print u'-------第  %d 張圖片下載-------' %ex_image_url_count
+			text_update('第  %d 張圖片下載\n' %ex_image_url_count)
 
 # 分析dcard文章網址
 def dcard_model(url):
@@ -144,7 +148,7 @@ def dcard_model(url):
 
 		# 抓取文章內容及圖片網址
 		text = soup.select('div.Post_content_NKEl9 > div > div')
-		print u'---------正在下載圖片---------'
+		text_update('正在下載圖片\n')
 		for a in text:
 			model = 0
 			txt = a.select('img[src]')
@@ -158,10 +162,10 @@ def dcard_model(url):
 				textdata.append(a.text)
 				dcard_sentence_count += 1
 		if dcard_image_url_count > 9:
-			print u'--------總共 %d 張圖片--------' %dcard_image_url_count
+			text_update('總共 %d 張圖片\n' %dcard_image_url_count)
 		else:
-			print u'--------總共  %d 張圖片--------' %dcard_image_url_count
-		print u'---------圖片下載完成---------'
+			text_update('總共  %d 張圖片\n' %dcard_image_url_count)
+		text_update('圖片下載完成\n')
 
 		# 下載dcard文章
 		dcard_txt_download(url)
@@ -177,9 +181,9 @@ def dcard_image_download(dcardimageurl):
 	with open(dcard_title[0] +'/' + filename, 'wb') as code:
 		code.write(imgcontent)   
 		if dcard_image_url_count > 9:
-			print u'-------第 %d 張圖片下載-------' %dcard_image_url_count
+			text_update('第 %d 張圖片下載\n' %dcard_image_url_count)
 		else:
-			print u'-------第 %d 張圖片下載--------' %dcard_image_url_count
+			text_update('第 %d 張圖片下載\n' %dcard_image_url_count)
 
 # 將標題縮減空白刪除無意義字元
 def dcard_fix_title(dcardtitle):
@@ -206,8 +210,8 @@ def dcard_fix_title(dcardtitle):
 
 #下載dcard文章
 def dcard_txt_download(url) :
-	print '------------------------------'
-	print u'---------正在下載文章---------'
+	text_update('------------------------------\n')
+	text_update('正在下載文章\n')
 	filename = dcard_title[0] + '.txt'
 	with open(dcard_title[0] + '/' + filename, 'a') as code:
 		for i in range (dcard_sentence_count - 1) :
@@ -215,8 +219,8 @@ def dcard_txt_download(url) :
 			code.write('\n')
 		code.write('\n')
 		code.write("文章網址 :" + url.encode('utf-8', 'ignore'))
-	print u'---------文章儲存完成---------'
-	print '------------------------------'
+	text_update('文章儲存完成\n')
+	text_update('------------------------------\n')
 
 # 分析ptt文章網址
 def ptt_model(url):
@@ -226,6 +230,7 @@ def ptt_model(url):
 	format_data = []
 	ptt_information = []
 	txt_data = []
+	ptt_tmp = []
 
 	# 查詢要求的網站
 	r = requests.get(url, cookies = ptt_cookies)
@@ -247,12 +252,17 @@ def ptt_model(url):
 		for i in ptt:
 			ptt_information.append(i.text)
 
+		if '/' in ptt_information[2]:
+			for i in ptt_information[2].split('/'):
+				ptt_tmp.append(i)		
+			ptt_information[2] = '+'.join(ptt_tmp)
+
 		# 製作資料夾
 		mkdir(ptt_information[2])
 
 		# 以 class 找出網址
 		urldata = soup.find_all('a', rel = "nofollow")
-		print u'---------開始下載圖片---------'
+		text_update('開始下載圖片\n')
 		for s in urldata:
 			if 'imgur' in s.text:
 				image_url_count += 1
@@ -261,9 +271,9 @@ def ptt_model(url):
 				image_url_count += 1
 				image_download(s.text)
 		
-		print u'---------圖片下載完畢---------'
-		print '------------------------------'
-		print u'--------總共 %d 張圖片---------' %image_url_count
+		text_update('圖片下載完畢\n')
+		text_update('------------------------------\n')
+		text_update('總共 %d 張圖片\n' %image_url_count)
 
 		# 抓取文章內容
 		txt = soup.find(id = 'main-content')
@@ -317,7 +327,7 @@ def image_download(imageurl):
 	imgcontent = requests.get(imageurl).content
 	with open(ptt_information[2] + '/' + filename,'wb') as code:
 			code.write(imgcontent)		
-			print u'-------第 %d 張圖片下載--------' %image_url_count
+			text_update('第 %d 張圖片下載\n' %image_url_count)
 
 	if '.jpg' in imageurl:
 		format_data.append('.jpg')
@@ -332,8 +342,8 @@ def image_download(imageurl):
 def ptt_word(url):
 	num = 1
 	txt = docx.Document()
-	print '------------------------------'
-	print u'---------開始下載文章---------'
+	text_update('------------------------------\n')
+	text_update('開始下載文章\n')
 	for i in range(1, sentence_count):
 		if u'文章網址' in txt_data[i]:
 			break
@@ -352,8 +362,8 @@ def ptt_word(url):
 	txt.add_paragraph(u'\n網友' + ptt_information[0] + u'分享於' + ptt_information[1])
 	txt.add_paragraph(url + '\n')
 	txt.save(ptt_information[2] + '.docx')
-	print u'---------文章下載完畢---------'
-	print '------------------------------'
+	text_update('文章下載完畢\n')
+	text_update('------------------------------\n')
 
 # 建立資料夾
 def mkdir(titlename) :
@@ -364,34 +374,84 @@ def mkdir(titlename) :
     newpath = path + '/' + titlename
     if not os.path.isdir(newpath):
         os.mkdir(newpath)
-        print '------------------------------'
-        print u'文章標題 :',
-        print titlename.encode('utf-8', 'ignore')
-        print '------------------------------'
+        text_update('------------------------------\n')
+        text_update('文章標題: ')
+        text_update(titlename.encode('utf-8', 'ignore'))
+        text_update('\n------------------------------\n')
 
-# 初始化介面
-def initial_interface():
-	print '----------------------------------'
-	print u'--------歡迎使用Kuso下載器--------'
-	print u'---------直接輸入網址即可---------'
-	print '----------------------------------'
-
-#主程式
-def main():
-	initial_interface()
-	while(1):
-		url = raw_input("請輸入文章網址:[離開程式請輸入 q ]\n")
-		if 'ptt' in url:
-			ptt_model(url)
-		elif 'dcard' in url:
-			dcard_model(url)
-		elif 'exhentai' in url:
-			exhentai_model(url)
-		elif url == 'q':
-			break;
-		else:
-			print u'----輸入無效模式，請重新輸入。----'
-	print u'-----------程式結束-----------'
+state = 0
 
 if __name__ == "__main__":
-	main()
+	
+	windows = Tkinter.Tk()
+
+	# 標題
+	windows.title('Kuso下載器')
+
+	# 視窗大小
+	windows.geometry('800x500')
+
+	# 設置封面圖片
+	img_open = Image.open('cc.png')
+	img_png = ImageTk.PhotoImage(img_open)
+	label_img = Tkinter.Label(windows, image = img_png)
+	label_img.pack()
+
+	def clear_box(event):
+		web_url.delete(0, Tkinter.END)
+		return
+
+	Tkinter.Label(windows, text = '下載網址: ', font=('Arial', '20')).place(x = 10, y = 100)
+	get_web_url = Tkinter.StringVar()
+	get_web_url.set('請輸入文章網址:')
+	web_url = Tkinter.Entry(windows, textvariable = get_web_url, width = 70)
+	web_url.place(x = 100, y = 100)
+	web_url.bind("<Button>", clear_box)
+
+	# 輸出文字介面
+	Tkinter.Label(windows, text = '下載狀態: ', font=('Arial', '20')).place(x = 10, y = 140)
+	textbox = Tkinter.Text(windows, height = 10, width = 80)
+	textbox.place(x = 10, y = 180)
+
+	# 顯示目前狀態
+	def text_update(word):
+		textbox.insert('insert', word)
+		textbox.update()
+		textbox.see(Tkinter.END)
+
+	# 彈出錯誤視窗
+	def error_message():
+		messagebox.showerror(title='Warning', message = '輸入無效網址，請重新輸入。')
+
+	# 彈出下載完成
+	def finish_download():
+		messagebox.showerror(title='Finish!!!!', message = '下載完成！！！！！！！')
+
+	# 主程式
+	def run():
+		global state
+		if state == 1:
+			textbox.delete(1.0, Tkinter.END)
+		url = get_web_url.get()
+		if 'ptt' in url:
+			state = 1
+			ptt_model(url)
+			finish_download()
+		elif 'dcard' in url:
+			state = 1
+			dcard_model(url)
+			finish_download()
+		elif 'exhentai' in url:
+			state = 1
+			exhentai_model(url)
+			finish_download()
+		else:
+			state = 0
+			error_message()
+
+	# 按鈕
+	start_button = Tkinter.Button(windows, text = '開始下載', width = 20, height = 2, font=('Arial', '20'), command = run).place(x = 10, y = 360)
+	end_button = Tkinter.Button(windows, text = '結束程式', width = 20, height = 2, font=('Arial', '20'), command = windows.destroy).place(x = 300, y = 360)
+
+	# 主循環
+	windows.mainloop()
