@@ -22,12 +22,15 @@ class Exhentai():
         self.ex_mainpage = 0
         self.ex_title = []
         self.ex_page = []
+        '''
+        填入自己的cookies
+        '''
         self.ex_cookies = {
-            'ipb_member_id': '3269633',
-            'ipb_pass_hash': '7cc9941d5589a4c0be88c766c5cc4e11',
-            'igneous': '1540e4cb1',
-            's': 'e30d0ff5a',
-            'lv': '1537947013-1537950968',
+            'ipb_member_id': '',
+            'ipb_pass_hash': '',
+            'igneous': '',
+            's': '',
+            'lv': '',
         }
         # header資訊
         self.headers = {
