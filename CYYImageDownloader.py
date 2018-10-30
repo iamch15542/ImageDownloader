@@ -38,17 +38,11 @@ class Exhentai():
     # 分析exhentai連結
     def ex_analysis(self):
 
-        # 查詢要求的網站
         r = requests.get(self.url, headers=headers, cookies=self.ex_cookies)
-
-        # 確認是否下載成功
         if r.status_code == requests.codes.ok:
-
-            # 以 BeautifulSoup 解析 HTML 程式碼
             soup = BeautifulSoup(r.text, 'html.parser')
 
             if self.ex_mainpage == 0:
-                # 獲得圖片張數
                 page = soup.select('.gdt2')
 
                 for a in page:
@@ -62,20 +56,19 @@ class Exhentai():
 
             title = soup.select('.gm > #gd2 > #gj')
             for a in title:
-                # 製作資料夾
                 self.ex_title.append(a.text)
                 mkdir(a.text)
 
             # 以 select 抓出分頁網址
             urldata = soup.select('.gdtm > div > a')
-            for s in urldata:
+            for sub_url in urldata:
                 self.ex_image_url_count += 1
                 try:
-                    self.exhentai_image_url(s['href'])
+                    self.exhentai_image_url(sub_url['href'])
                 except:
                     text_update('下載圖片過程發生問題\n')
                 # 停頓5秒，以免速度過快
-                time.sleep(2)
+                time.sleep(5)
 
             if self.ex_mainpage == 0:
                 self.ex_mainpage += 1
@@ -92,25 +85,16 @@ class Exhentai():
 
     # 取得exhentai圖片網址
     def exhentai_image_url(self, imageurl):
-
-        # 查詢要求的網站
-        r1 = requests.get(imageurl, headers=headers, cookies=self.ex_cookies)
-
-        # 確認是否下載成功
-        if r1.status_code == requests.codes.ok:
-
-            # 以 BeautifulSoup 解析 HTML 程式碼
-            soup = BeautifulSoup(r1.text, 'html.parser')
-
-            # 以 class 抓出圖片網址
+        sub_r = requests.get(
+            imageurl, headers=headers, cookies=self.ex_cookies)
+        if sub_r.status_code == requests.codes.ok:
+            soup = BeautifulSoup(sub_r.text, 'html.parser')
             url = soup.select('#i3 > a > img')
-
-            for s in url:
+            for img in url:
                 try:
-                    self.exhentai_image_download(s['src'])
+                    self.exhentai_image_download(img['src'])
                 except:
                     text_update('下載圖片過程發生問題\n')
-
 
     # 下載exhentai圖片
     def exhentai_image_download(self, galleryurl):
@@ -126,7 +110,7 @@ class Exhentai():
 
 class Dcard():
     def __init__(self, url):
-        self.url = url
+        self.__url = url
         self.dcard_text = []
         self.dcard_image_url_count = 0
         self.dcard_sentence_count = 0
@@ -134,12 +118,8 @@ class Dcard():
 
     # 分析dcard文章網址
     def dcard_analysis(self):
-        # 查詢要求的網站
-        r = requests.get(self.url)
-        # 確認是否下載成功
+        r = requests.get(self.__url)
         if r.status_code == requests.codes.ok:
-
-            # 以 BeautifulSoup 解析 HTML 程式碼
             soup = BeautifulSoup(r.text, 'html.parser')
 
             # 抓取文章標題並且修正
@@ -175,7 +155,7 @@ class Dcard():
 
             # 下載dcard文章
             try:
-                self.dcard_txt_download(self.url)
+                self.dcard_txt_download(self.__url)
             except:
                 text_update('下載文章過程發生問題\n')
 
@@ -341,22 +321,24 @@ class Ptt():
         if '.jpg' in imageurl:
             try:
                 self.format_data.append('.jpg')
-                im = Image.open(self.ptt_information[2].encode('utf-8', 'ignore') +
-                                '/' + str(self.image_url_count) + '.jpg')
+                im = Image.open(
+                    self.ptt_information[2].encode('utf-8', 'ignore') + '/' +
+                    str(self.image_url_count) + '.jpg')
                 im.save(
-                    self.ptt_information[2].encode('utf-8', 'ignore') + '/' + str(
-                        self.image_url_count) + '.jpg', "JPEG")
+                    self.ptt_information[2].encode('utf-8', 'ignore') + '/' +
+                    str(self.image_url_count) + '.jpg', "JPEG")
             except IOError:
                 text_update('第 %d 張圖片下載失敗\n' % self.image_url_count)
                 self.image_url_count -= 1
         elif '.png' in imageurl:
             try:
                 self.format_data.append('.png')
-                im = Image.open(self.ptt_information[2].encode('utf-8', 'ignore') +
-                                '/' + str(self.image_url_count) + '.png')
+                im = Image.open(
+                    self.ptt_information[2].encode('utf-8', 'ignore') + '/' +
+                    str(self.image_url_count) + '.png')
                 im.save(
-                    self.ptt_information[2].encode('utf-8', 'ignore') + '/' + str(
-                        self.image_url_count) + '.png', "PNG")
+                    self.ptt_information[2].encode('utf-8', 'ignore') + '/' +
+                    str(self.image_url_count) + '.png', "PNG")
             except IOError:
                 text_update('第 %d 張圖片下載失敗\n' % self.image_url_count)
                 self.image_url_count -= 1
@@ -393,9 +375,12 @@ class Ptt():
         text_update('文章下載完畢\n')
         text_update('------------------------------\n')
 
+
 '''
 下載Youtube影片
 '''
+
+
 class Youtube():
     def __init__(self, url):
         self.__url = url
@@ -412,9 +397,12 @@ class Youtube():
         text_update('影片下載完畢\n')
         text_update('------------------------------\n')
 
+
 '''
 下載IG圖片
 '''
+
+
 class Instagram():
     def __init__(self, url):
         self.__url = url
@@ -534,6 +522,8 @@ if __name__ == "__main__":
             ig = Instagram(url)
             ig.analysis_ig()
             finish_download()
+        elif url == 'q':
+            windows.destroy()
         else:
             state = 0
             error_message()
