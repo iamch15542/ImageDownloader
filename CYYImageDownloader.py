@@ -22,9 +22,6 @@ class Exhentai():
         self.ex_mainpage = 0
         self.ex_title = []
         self.ex_page = []
-        '''
-        填入自己的cookies
-        '''
         self.ex_cookies = {
             'ipb_member_id': '',
             'ipb_pass_hash': '',
@@ -73,7 +70,10 @@ class Exhentai():
             urldata = soup.select('.gdtm > div > a')
             for s in urldata:
                 self.ex_image_url_count += 1
-                self.exhentai_image_url(s['href'])
+                try:
+                    self.exhentai_image_url(s['href'])
+                except:
+                    text_update('下載圖片過程發生問題\n')
                 # 停頓5秒，以免速度過快
                 time.sleep(2)
 
@@ -106,7 +106,11 @@ class Exhentai():
             url = soup.select('#i3 > a > img')
 
             for s in url:
-                self.exhentai_image_download(s['src'])
+                try:
+                    self.exhentai_image_download(s['src'])
+                except:
+                    text_update('下載圖片過程發生問題\n')
+
 
     # 下載exhentai圖片
     def exhentai_image_download(self, galleryurl):
@@ -153,7 +157,10 @@ class Dcard():
                 txt = a.select('img[src]')
                 for b in txt:
                     self.dcard_image_url_count += 1
-                    self.dcard_image_download(b.get('src'))
+                    try:
+                        self.dcard_image_download(b.get('src'))
+                    except:
+                        text_update('下載圖片過程發生問題\n')
                     self.dcard_text.append(b.get('src'))
                     self.dcard_sentence_count += 1
                     model += 1
@@ -167,7 +174,10 @@ class Dcard():
             text_update('圖片下載完成\n')
 
             # 下載dcard文章
-            self.dcard_txt_download(self.url)
+            try:
+                self.dcard_txt_download(self.url)
+            except:
+                text_update('下載文章過程發生問題\n')
 
     # 下載圖片
     def dcard_image_download(self, dcardimageurl):
@@ -232,16 +242,10 @@ class Ptt():
         self.ptt_cookies = {'over18': '1'}
 
     def analysis(self):
-        # 查詢要求的網站
         r = requests.get(self.url, cookies=self.ptt_cookies)
-
-        # 確認是否下載成功
         if r.status_code == requests.codes.ok:
 
-            # 以 BeautifulSoup 解析 HTML 程式碼
             soup = BeautifulSoup(r.text, 'html.parser')
-
-            # 抓取作者, 看板及標題資訊
             ptt = soup.find_all('span', class_='article-meta-value')
 
             # 作者: ptt_information[0], 看板: ptt_information[1], 標題: ptt_information[2]
@@ -262,10 +266,16 @@ class Ptt():
             for s in urldata:
                 if 'imgur' in s.text:
                     self.image_url_count += 1
-                    self.image_download(s.text)
+                    try:
+                        self.image_download(s.text)
+                    except:
+                        text_update('下載圖片過程發生問題\n')
                 elif 'pbs' in s.text:
                     self.image_url_count += 1
-                    self.image_download(s.text)
+                    try:
+                        self.image_download(s.text)
+                    except:
+                        text_update('下載圖片過程發生問題\n')
 
             text_update('圖片下載完畢\n')
             text_update('------------------------------\n')
@@ -278,7 +288,10 @@ class Ptt():
                 self.sentence_count += 1
 
             # 製作文件
-            self.ptt_word(self.url)
+            try:
+                self.ptt_word(self.url)
+            except:
+                text_update('下載文章過程發生問題\n')
 
     # 確認imgur網址的格式
     def double_check_imgur(self, checkurl):
@@ -326,19 +339,30 @@ class Ptt():
             text_update('第 %d 張圖片下載\n' % self.image_url_count)
 
         if '.jpg' in imageurl:
-            self.format_data.append('.jpg')
-            im = Image.open(self.ptt_information[2].encode('utf-8', 'ignore') +
-                            '/' + str(self.image_url_count) + '.jpg')
-            im.save(
-                self.ptt_information[2].encode('utf-8', 'ignore') + '/' + str(
-                    self.image_url_count) + '.jpg', "JPEG")
-        if '.png' in imageurl:
-            self.format_data.append('.png')
-            im = Image.open(self.ptt_information[2].encode('utf-8', 'ignore') +
-                            '/' + str(self.image_url_count) + '.png')
-            im.save(
-                self.ptt_information[2].encode('utf-8', 'ignore') + '/' + str(
-                    self.image_url_count) + '.png', "PNG")
+            try:
+                self.format_data.append('.jpg')
+                im = Image.open(self.ptt_information[2].encode('utf-8', 'ignore') +
+                                '/' + str(self.image_url_count) + '.jpg')
+                im.save(
+                    self.ptt_information[2].encode('utf-8', 'ignore') + '/' + str(
+                        self.image_url_count) + '.jpg', "JPEG")
+            except IOError:
+                text_update('第 %d 張圖片下載失敗\n' % self.image_url_count)
+                self.image_url_count -= 1
+        elif '.png' in imageurl:
+            try:
+                self.format_data.append('.png')
+                im = Image.open(self.ptt_information[2].encode('utf-8', 'ignore') +
+                                '/' + str(self.image_url_count) + '.png')
+                im.save(
+                    self.ptt_information[2].encode('utf-8', 'ignore') + '/' + str(
+                        self.image_url_count) + '.png', "PNG")
+            except IOError:
+                text_update('第 %d 張圖片下載失敗\n' % self.image_url_count)
+                self.image_url_count -= 1
+        else:
+            text_update('第 %d 張圖片下載失敗\n' % self.image_url_count)
+            self.image_url_count -= 1
 
     # 製作Word文檔
     def ptt_word(self, url):
@@ -369,7 +393,9 @@ class Ptt():
         text_update('文章下載完畢\n')
         text_update('------------------------------\n')
 
-
+'''
+下載Youtube影片
+'''
 class Youtube():
     def __init__(self, url):
         self.__url = url
@@ -382,11 +408,13 @@ class Youtube():
         dl = yt.streams.first()
         dl.download(path)
         text_update('影片標題: ')
-        text_update(yt.title +'\n')
+        text_update(yt.title + '\n')
         text_update('影片下載完畢\n')
         text_update('------------------------------\n')
 
-
+'''
+下載IG圖片
+'''
 class Instagram():
     def __init__(self, url):
         self.__url = url
@@ -398,14 +426,15 @@ class Instagram():
             soup = BeautifulSoup(r.text, 'html.parser')
             getjson = soup.find_all("script", type="text/javascript")[3].string
 
-            getjson = getjson[getjson.find('=')+2:-1]
+            getjson = getjson[getjson.find('=') + 2:-1]
             data = json.loads(getjson)
-            image_url = data['entry_data']['PostPage'][0]['graphql']['shortcode_media']['display_url']
+            image_url = data['entry_data']['PostPage'][0]['graphql'][
+                'shortcode_media']['display_url']
             text_update('------------------------------\n')
             text_update('開始下載圖片\n')
             filename = str(1) + '.jpg'
             imgcontent = requests.get(image_url).content
-            with open(filename,'wb') as code :
+            with open(filename, 'wb') as code:
                 code.write(imgcontent)
             text_update('圖片下載完畢\n')
             text_update('------------------------------\n')
@@ -439,7 +468,7 @@ if __name__ == "__main__":
     windows.geometry('800x500')
 
     # 設置封面圖片
-    img_open = Image.open('cc.png')
+    img_open = Image.open('title.png')
     img_png = ImageTk.PhotoImage(img_open)
     label_img = tk.Label(windows, image=img_png)
     label_img.pack()
