@@ -7,7 +7,7 @@
 3. 若要結束程式，請輸入 'q' 就可以了
 
 ## 版本
-Version 5.1.1
+Version 5.1.2
 
 ## 更新內容
 Version4.0.1: 新增GUI介面!!!
@@ -19,6 +19,8 @@ Version5.0.0: 新增下載youtube的功能
 Version5.1.0: 新增下載ig圖片功能
 
 Version5.1.1: 修正無法下載圖片的問題
+
+Version5.1.2: 修正下載Dcard圖片問題
 
 ## 注意事項
 1. 僅支援 PTT, Dcard, Instagram, Youtube 網址，其餘網址皆會視為無效網址

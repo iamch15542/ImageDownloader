@@ -1,4 +1,5 @@
 #coding=utf-8
+#version: 5.1.2
 import json
 import os
 import time
@@ -115,10 +116,15 @@ class Dcard():
         self.dcard_image_url_count = 0
         self.dcard_sentence_count = 0
         self.dcard_title = []
+        self.dcard_headers = {
+            'user-agent':
+            'Mozilla/5.0 (Macintosh Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
+        }
 
     # 分析dcard文章網址
     def dcard_analysis(self):
-        r = requests.get(self.__url)
+        r = requests.get(self.__url, headers=self.dcard_headers)
+
         if r.status_code == requests.codes.ok:
             soup = BeautifulSoup(r.text, 'html.parser')
 
@@ -130,7 +136,7 @@ class Dcard():
             mkdir(self.dcard_title[0])
 
             # 抓取文章內容及圖片網址
-            text = soup.select('div.Post_content_NKEl9 > div > div')
+            text = soup.select('div.Post_content_NKEl9d > div > div')
             text_update('正在下載圖片\n')
             for a in text:
                 model = 0
@@ -166,7 +172,7 @@ class Dcard():
         dcardimageurl.replace('imgur.dcard.tw', 'i.imgur.com')
 
         filename = str(self.dcard_image_url_count) + '.jpg'
-        imgcontent = requests.get(dcardimageurl).content
+        imgcontent = requests.get(dcardimageurl, headers=self.dcard_headers).content
         with open(self.dcard_title[0] + '/' + filename, 'wb') as code:
             code.write(imgcontent)
             if self.dcard_image_url_count > 9:
