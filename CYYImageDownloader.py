@@ -15,100 +15,6 @@ from PIL import Image
 from PIL import ImageTk
 
 
-class Exhentai():
-    def __init__(self, url):
-        self.url = url
-        # 紀錄圖片數量
-        self.ex_image_url_count = 0
-        self.ex_mainpage = 0
-        self.ex_title = []
-        self.ex_page = []
-        self.ex_cookies = {
-            'ipb_member_id': '',
-            'ipb_pass_hash': '',
-            'igneous': '',
-            's': '',
-            'lv': '',
-        }
-        # header資訊
-        self.headers = {
-            'user-agent':
-            'Mozilla/5.0 (Macintosh Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
-        }
-
-    # 分析exhentai連結
-    def ex_analysis(self):
-
-        r = requests.get(self.url, headers=headers, cookies=self.ex_cookies)
-        if r.status_code == requests.codes.ok:
-            soup = BeautifulSoup(r.text, 'html.parser')
-
-            if self.ex_mainpage == 0:
-                page = soup.select('.gdt2')
-
-                for a in page:
-                    self.ex_page.append(a.text)
-
-                for a in self.ex_page[5].split():
-                    self.ex_page[5] = a
-                    break
-                text_update('開始下載圖片\n')
-                page_id = int(self.ex_page[5]) / 40
-
-            title = soup.select('.gm > #gd2 > #gj')
-            for a in title:
-                self.ex_title.append(a.text)
-                mkdir(a.text)
-
-            # 以 select 抓出分頁網址
-            urldata = soup.select('.gdtm > div > a')
-            for sub_url in urldata:
-                self.ex_image_url_count += 1
-                try:
-                    self.exhentai_image_url(sub_url['href'])
-                except:
-                    text_update('下載圖片過程發生問題\n')
-                # 停頓5秒，以免速度過快
-                time.sleep(5)
-
-            if self.ex_mainpage == 0:
-                self.ex_mainpage += 1
-                for i in range(page_id):
-                    next_url = self.url + '?p=' + str(i + 1)
-                    self.exhentai_model(next_url)
-                    time.sleep(20)
-
-                if self.ex_image_url_count > 9:
-                    text_update('總共 %d 張圖片\n' % self.ex_image_url_count)
-                else:
-                    text_update('總共 %d 張圖片\n' % self.ex_image_url_count)
-                text_update('圖片下載完成\n')
-
-    # 取得exhentai圖片網址
-    def exhentai_image_url(self, imageurl):
-        sub_r = requests.get(
-            imageurl, headers=headers, cookies=self.ex_cookies)
-        if sub_r.status_code == requests.codes.ok:
-            soup = BeautifulSoup(sub_r.text, 'html.parser')
-            url = soup.select('#i3 > a > img')
-            for img in url:
-                try:
-                    self.exhentai_image_download(img['src'])
-                except:
-                    text_update('下載圖片過程發生問題\n')
-
-    # 下載exhentai圖片
-    def exhentai_image_download(self, galleryurl):
-        filename = str(self.ex_image_url_count) + '.jpg'
-        imgcontent = requests.get(galleryurl).content
-        with open(self.ex_title[0] + '/' + filename, 'wb') as code:
-            code.write(imgcontent)
-            if self.ex_image_url_count > 9:
-                text_update('第 %d 張圖片下載\n' % self.ex_image_url_count)
-            else:
-                text_update('第  %d 張圖片下載\n' % self.ex_image_url_count)
-
-
 class Dcard():
     def __init__(self, url):
         self.__url = url
@@ -128,6 +34,9 @@ class Dcard():
         if r.status_code == requests.codes.ok:
             soup = BeautifulSoup(r.text, 'html.parser')
 
+            # 輸出排版後的樣子
+            # print(soup.prettify())
+            
             # 抓取文章標題並且修正
             title = soup.find("meta", property="og:title")
             self.dcard_fix_title(title["content"])
@@ -186,6 +95,7 @@ class Dcard():
         tmp_2 = []
         count = 0
 
+        print(dcardtitle)
         # 將原本的標題分成片段
         for i in dcardtitle.split():
             tmp_title.append(i)
@@ -512,11 +422,6 @@ if __name__ == "__main__":
             state = 1
             dcard = Dcard(url)
             dcard.dcard_analysis()
-            finish_download()
-        elif 'exhentai' in url:
-            state = 1
-            ex = Exhentai(url)
-            ex.ex_analysis()
             finish_download()
         elif 'youtube' in url:
             state = 1
