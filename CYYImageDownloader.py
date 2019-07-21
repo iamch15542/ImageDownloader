@@ -1,5 +1,6 @@
+#!/usr/bin/python
 #coding=utf-8
-#version: 5.1.2
+#version: 5.1.4
 import json
 import os
 import time
@@ -13,6 +14,11 @@ from bs4 import BeautifulSoup
 from docx.shared import Inches
 from PIL import Image
 from PIL import ImageTk
+
+
+'''
+下載 Dcard 文章以及圖片
+'''
 
 
 class Dcard():
@@ -78,7 +84,7 @@ class Dcard():
     def dcard_image_download(self, dcardimageurl):
 
         # 將網址換成正確的格式
-        dcardimageurl.replace('imgur.dcard.tw', 'i.imgur.com')
+        dcardimageurl = dcardimageurl.replace('imgur.dcard.tw', 'i.imgur.com')
 
         filename = str(self.dcard_image_url_count) + '.jpg'
         imgcontent = requests.get(dcardimageurl, headers=self.dcard_headers).content
@@ -126,6 +132,11 @@ class Dcard():
         text_update('------------------------------\n')
 
 
+'''
+下載 PTT 文章以及圖片
+'''
+
+
 class Ptt():
     def __init__(self, url):
         self.url = url
@@ -160,18 +171,27 @@ class Ptt():
             urldata = soup.find_all('a', rel="nofollow")
             text_update('開始下載圖片\n')
             for s in urldata:
-                if 'imgur' in s.text:
+                if '.jpg' in s.text:
                     self.image_url_count += 1
                     try:
                         self.image_download(s.text)
                     except:
                         text_update('下載圖片過程發生問題\n')
-                elif 'pbs' in s.text:
+                elif '.png' in s.text:
                     self.image_url_count += 1
                     try:
                         self.image_download(s.text)
                     except:
                         text_update('下載圖片過程發生問題\n')
+                elif 'imgur' in s.text:
+                    self.image_url_count += 1
+                    try:
+                        self.image_download(s.text)
+                    except:
+                        text_update('下載圖片過程發生問題\n')
+                elif 'pixnet' in s.text:
+                    pixnet = Pixnet(s.text)
+                    pixnet.pixnet_analysis(self.ptt_information[2])
 
             text_update('圖片下載完畢\n')
             text_update('------------------------------\n')
@@ -201,6 +221,10 @@ class Ptt():
             if 'png' in checkurl:
                 model = 1
 
+            if 'imgur.dcard.tw' in checkurl:
+                checkurl = checkurl.replace('imgur.dcard.tw', 'i.imgur.com')
+                model = 1
+
             # 網址沒有 JPG 或是 PNG ，則要進入網頁搜尋正確的網址
             if model == 0:
 
@@ -225,7 +249,7 @@ class Ptt():
         if 'imgur' in imageurl:
             imageurl = self.double_check_imgur(imageurl)
 
-        elif 'pbs' in imageurl:
+        else:
             pass
 
         filename = str(self.image_url_count) + imageurl[-4:]
@@ -344,6 +368,105 @@ class Instagram():
             text_update('------------------------------\n')
 
 
+'''
+下載 Pixnet 文章以及圖片
+'''
+
+
+class Pixnet():
+    def __init__(self, url):
+        self.__url = url
+        self.pixnet_text = []
+        self.pixnet_image_url_count = 0
+        self.pixnet_sentence_count = 0
+        self.pixnet_title = []
+        self.pixnet_dir = []
+        self.pixnet_headers = {
+            'user-agent':
+            'Mozilla/5.0 (Macintosh Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
+        }
+
+    # 分析 pixnet 文章網址
+    def pixnet_analysis(self, pixnetdir=''):
+        r = requests.get(self.__url, headers=self.pixnet_headers)
+
+        # 先 encode成 utf-8 的格式
+        r.encoding='utf-8'
+
+        if r.status_code == requests.codes.ok:
+            soup = BeautifulSoup(r.text, 'html.parser')
+            
+            # 抓取文章標題並且修正
+            title = soup.select('.title a')
+            self.pixnet_title = title[0].contents[0] + '(Pixnet)'
+            # print(title[0].contents[0].encode('utf-8', 'ignore'))
+
+            if pixnetdir != '':
+                self.pixnet_dir = pixnetdir + '/' + self.pixnet_title
+            else:
+                self.pixnet_dir = self.pixnet_title
+
+
+            # 創建資料夾
+            mkdir(self.pixnet_dir)
+
+            # 抓取文章內容及圖片網址
+            text = soup.select('div.article-content > div > p')
+            text_update('正在下載圖片\n')
+            for a in text:
+                model = 0
+                txt = a.select('img[src]')
+                for b in txt:
+                    self.pixnet_image_url_count += 1
+                    try:
+                        self.pixnet_image_download(b.get('src'))
+                    except:
+                        text_update('下載圖片過程發生問題\n')
+                    self.pixnet_text.append(b.get('src'))
+                    self.pixnet_sentence_count += 1
+                    model += 1
+                if model == 0:
+                    self.pixnet_text.append(a.text)
+                    self.pixnet_sentence_count += 1
+            if self.pixnet_image_url_count > 9:
+                text_update('總共 %d 張圖片\n' % self.pixnet_image_url_count)
+            else:
+                text_update('總共  %d 張圖片\n' % self.pixnet_image_url_count)
+            text_update('圖片下載完成\n')
+
+            # 下載 pixnet 文章
+            try:
+                self.pixnet_txt_download(self.__url)
+            except:
+                text_update('下載文章過程發生問題\n')
+
+    # 下載圖片
+    def pixnet_image_download(self, pixnetimageurl):
+
+        filename = str(self.pixnet_image_url_count) + pixnetimageurl[-4:]
+        imgcontent = requests.get(pixnetimageurl, headers=self.pixnet_headers).content
+        with open(self.pixnet_dir + '/' + filename, 'wb') as code:
+            code.write(imgcontent)
+            if self.pixnet_image_url_count > 9:
+                text_update('第 %d 張圖片下載\n' % self.pixnet_image_url_count)
+            else:
+                text_update('第  %d 張圖片下載\n' % self.pixnet_image_url_count)
+
+    #下載 pixnet 文章
+    def pixnet_txt_download(self, url):
+        text_update('------------------------------\n')
+        text_update('正在下載文章\n')
+        filename = self.pixnet_title + '.txt'
+        with open(self.pixnet_dir + '/' + filename, 'a') as code:
+            for i in range(self.pixnet_sentence_count):
+                code.write(self.pixnet_text[i].encode('utf-8', 'ignore'))
+                code.write('\n')
+            code.write('\n')
+            code.write("文章網址 :" + url.encode('utf-8', 'ignore'))
+        text_update('文章儲存完成\n')
+        text_update('------------------------------\n')
+
+
 # 建立資料夾
 def mkdir(titlename):
     # 用 path = os.getcwd() 來取得腳本位置
@@ -432,6 +555,11 @@ if __name__ == "__main__":
             state = 1
             ig = Instagram(url)
             ig.analysis_ig()
+            finish_download()
+        elif 'pixnet' in url:
+            state = 1
+            pixnet = Pixnet(url)
+            pixnet.pixnet_analysis()
             finish_download()
         elif url == 'q':
             windows.destroy()

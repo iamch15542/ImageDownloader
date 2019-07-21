@@ -22,8 +22,10 @@ Version5.1.1: 修正無法下載圖片的問題
 
 Version5.1.2: 修正下載Dcard圖片問題
 
+Version5.1.4: 新增下載pixnet的功能
+
 ## 注意事項
-1. 僅支援 PTT, Dcard, Instagram, Youtube 網址，其餘網址皆會視為無效網址
+1. 僅支援 PTT, Dcard, Instagram, Youtube Pixnet網址，其餘網址皆會視為無效網址
 2. 目前無法下載gif圖片
 3. 請勿拿來做非法事項
 4. 若有任何bug，歡迎告知
