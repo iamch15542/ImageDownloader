@@ -443,6 +443,8 @@ class Pixnet():
     # 下載圖片
     def pixnet_image_download(self, pixnetimageurl):
 
+        if 'https:' not in pixnetimageurl:
+            pixnetimageurl = 'https:' + pixnetimageurl
         filename = str(self.pixnet_image_url_count) + pixnetimageurl[-4:]
         imgcontent = requests.get(pixnetimageurl, headers=self.pixnet_headers).content
         with open(self.pixnet_dir + '/' + filename, 'wb') as code:
