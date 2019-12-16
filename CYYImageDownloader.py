@@ -164,6 +164,13 @@ class Ptt():
                     self.ptt_tmp.append(i)
                 self.ptt_information[2] = '+'.join(self.ptt_tmp)
 
+            # 修正文章名稱冒號問題
+            if ': ' in self.ptt_information[2]:
+                self.ptt_information[2] = self.ptt_information[2].replace(': ', '-')
+
+            # 避免標題重複，因此檔案名稱加上作者
+            self.ptt_information[2] = self.ptt_information[2] + '-' + self.ptt_information[0].split(' ')[0]
+
             # 製作資料夾
             mkdir(self.ptt_information[2])
 
@@ -192,6 +199,8 @@ class Ptt():
                 elif 'pixnet' in s.text:
                     pixnet = Pixnet(s.text)
                     pixnet.pixnet_analysis(self.ptt_information[2])
+                elif 'https://www.ptt.cc/bbs' in s.text:
+                    break
 
             text_update('圖片下載完畢\n')
             text_update('------------------------------\n')
@@ -256,7 +265,10 @@ class Ptt():
         imgcontent = requests.get(imageurl).content
         with open(self.ptt_information[2] + '/' + filename, 'wb') as code:
             code.write(imgcontent)
-            text_update('第 %d 張圖片下載\n' % self.image_url_count)
+            if self.image_url_count > 9:
+                text_update('第 %d 張圖片下載\n' % self.image_url_count)
+            else:
+                text_update('第  %d 張圖片下載\n' % self.image_url_count)
 
         if '.jpg' in imageurl:
             try:
