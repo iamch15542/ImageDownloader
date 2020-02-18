@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #coding=utf-8
-#version: 5.1.4
+#version: 6.0.0
 import json
 import os
 import time
@@ -51,22 +51,23 @@ class Dcard():
             mkdir(self.dcard_title[0])
 
             # 抓取文章內容及圖片網址
-            text = soup.select('div.Post_content_NKEl9d > div > div')
-            text_update('正在下載圖片\n')
-            for a in text:
-                model = 0
-                txt = a.select('img[src]')
-                for b in txt:
+            Alltext = soup.select('div.dTLUmr > div > div')
+            text_update('開始下載圖片\n')
+
+            # 解析文字與圖片連結
+            tags = Alltext[0].find_all(['img', 'span'])
+            for each_tags in tags:
+                img_url = each_tags.get('src')
+                if not img_url:
+                    self.dcard_text.append(each_tags.text)
+                    self.dcard_sentence_count += 1
+                else:
                     self.dcard_image_url_count += 1
                     try:
-                        self.dcard_image_download(b.get('src'))
+                        self.dcard_image_download(img_url)
                     except:
                         text_update('下載圖片過程發生問題\n')
-                    self.dcard_text.append(b.get('src'))
-                    self.dcard_sentence_count += 1
-                    model += 1
-                if model == 0:
-                    self.dcard_text.append(a.text)
+                    self.dcard_text.append(img_url)
                     self.dcard_sentence_count += 1
             if self.dcard_image_url_count > 9:
                 text_update('總共 %d 張圖片\n' % self.dcard_image_url_count)
@@ -100,8 +101,7 @@ class Dcard():
         tmp_title = []
         tmp_2 = []
         count = 0
-
-        print(dcardtitle)
+        
         # 將原本的標題分成片段
         for i in dcardtitle.split():
             tmp_title.append(i)
@@ -109,6 +109,8 @@ class Dcard():
 
         # 合成成一個新片段
         for i in range(count - 3):
+            if '-' in tmp_title[i]:
+                break;
             self.dcard_title.append(tmp_title[i])
         self.dcard_title[0] = ''.join(self.dcard_title)
 
@@ -117,7 +119,10 @@ class Dcard():
                 tmp_2.append(i)
             self.dcard_title[0] = '+'.join(tmp_2)
 
-    #下載dcard文章
+        # 在終端機印出檢查
+        # print(self.dcard_title[0])
+
+    # 下載dcard文章
     def dcard_txt_download(self, url):
         text_update('------------------------------\n')
         text_update('正在下載文章\n')
