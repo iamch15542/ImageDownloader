@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #coding=utf-8
-#version: 6.0.0
+#version: 6.1.0
 import json
 import os
 import time
@@ -27,7 +27,7 @@ class Dcard():
         self.dcard_text = []
         self.dcard_image_url_count = 0
         self.dcard_sentence_count = 0
-        self.dcard_title = []
+        self.dcard_title = ""
         self.dcard_headers = {
             'user-agent':
             'Mozilla/5.0 (Macintosh Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
@@ -35,39 +35,37 @@ class Dcard():
 
     # 分析dcard文章網址
     def dcard_analysis(self):
-        r = requests.get(self.__url, headers=self.dcard_headers)
 
+        # 取得文章編號
+        post_num = self.__url.rsplit('/', 1)[1]
+
+        # 利用官方 api 取得文章內容
+        dcard_api_url = 'https://www.dcard.tw/_api/posts/' + post_num
+
+        r = requests.get(dcard_api_url, headers=self.dcard_headers)
+        dict_json = r.json()
+        
         if r.status_code == requests.codes.ok:
-            soup = BeautifulSoup(r.text, 'html.parser')
-
-            # 輸出排版後的樣子
-            # print(soup.prettify())
             
-            # 抓取文章標題並且修正
-            title = soup.find("meta", property="og:title")
-            self.dcard_fix_title(title["content"])
+            # 抓取文章標題
+            self.dcard_title = dict_json['title']
 
             # 創建資料夾
-            mkdir(self.dcard_title[0])
+            mkdir(self.dcard_title)
 
             # 抓取文章內容及圖片網址
-            Alltext = soup.select('div.dTLUmr > div > div')
-            text_update('開始下載圖片\n')
-
-            # 解析文字與圖片連結
-            tags = Alltext[0].find_all(['img', 'span'])
-            for each_tags in tags:
-                img_url = each_tags.get('src')
-                if not img_url:
-                    self.dcard_text.append(each_tags.text)
-                    self.dcard_sentence_count += 1
-                else:
+            list_text = dict_json['content'].split('\n')
+            for text in list_text:
+                if 'http' in text:
                     self.dcard_image_url_count += 1
                     try:
-                        self.dcard_image_download(img_url)
+                        self.dcard_image_download(text)
                     except:
                         text_update('下載圖片過程發生問題\n')
-                    self.dcard_text.append(img_url)
+                    self.dcard_text.append(text)
+                    self.dcard_sentence_count += 1
+                else:
+                    self.dcard_text.append(text)
                     self.dcard_sentence_count += 1
             if self.dcard_image_url_count > 9:
                 text_update('總共 %d 張圖片\n' % self.dcard_image_url_count)
@@ -85,49 +83,26 @@ class Dcard():
     def dcard_image_download(self, dcardimageurl):
 
         # 將網址換成正確的格式
-        dcardimageurl = dcardimageurl.replace('imgur.dcard.tw', 'i.imgur.com')
+        if 'imgur.dcard.tw' in dcardimageurl:
+            dcardimageurl = dcardimageurl.replace('imgur.dcard.tw', 'i.imgur.com')
+        elif 'megapx-assets.dcard.tw' in dcardimageurl:
+            dcardimageurl = dcardimageurl.rsplit('/', 1)[0] + '/full.jpeg'
 
         filename = str(self.dcard_image_url_count) + '.jpg'
         imgcontent = requests.get(dcardimageurl, headers=self.dcard_headers).content
-        with open(self.dcard_title[0] + '/' + filename, 'wb') as code:
+        with open(self.dcard_title + '/' + filename, 'wb') as code:
             code.write(imgcontent)
             if self.dcard_image_url_count > 9:
                 text_update('第 %d 張圖片下載\n' % self.dcard_image_url_count)
             else:
                 text_update('第 %d 張圖片下載\n' % self.dcard_image_url_count)
 
-    # 將標題縮減空白刪除無意義字元
-    def dcard_fix_title(self, dcardtitle):
-        tmp_title = []
-        tmp_2 = []
-        count = 0
-        
-        # 將原本的標題分成片段
-        for i in dcardtitle.split():
-            tmp_title.append(i)
-            count += 1
-
-        # 合成成一個新片段
-        for i in range(count - 3):
-            if '-' in tmp_title[i]:
-                break;
-            self.dcard_title.append(tmp_title[i])
-        self.dcard_title[0] = ''.join(self.dcard_title)
-
-        if '/' in self.dcard_title[0]:
-            for i in self.dcard_title[0].split('/'):
-                tmp_2.append(i)
-            self.dcard_title[0] = '+'.join(tmp_2)
-
-        # 在終端機印出檢查
-        # print(self.dcard_title[0])
-
     # 下載dcard文章
     def dcard_txt_download(self, url):
         text_update('------------------------------\n')
         text_update('正在下載文章\n')
-        filename = self.dcard_title[0] + '.txt'
-        with open(self.dcard_title[0] + '/' + filename, 'a') as code:
+        filename = self.dcard_title + '.txt'
+        with open(self.dcard_title + '/' + filename, 'a') as code:
             for i in range(self.dcard_sentence_count - 1):
                 code.write(self.dcard_text[i].encode('utf-8', 'ignore'))
                 code.write('\n')
