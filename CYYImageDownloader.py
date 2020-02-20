@@ -1,14 +1,12 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #coding=utf-8
-#version: 6.1.0
+#version: 6.2.0
 import json
 import os
-import time
-import tkMessageBox
-import Tkinter as tk
+import tkinter as tk
+from tkinter import messagebox
 
 import docx
-import pytube
 import requests
 from bs4 import BeautifulSoup
 from docx.shared import Inches
@@ -44,9 +42,9 @@ class Dcard():
 
         r = requests.get(dcard_api_url, headers=self.dcard_headers)
         dict_json = r.json()
-        
+
         if r.status_code == requests.codes.ok:
-            
+
             # 抓取文章標題
             self.dcard_title = dict_json['title']
 
@@ -63,14 +61,14 @@ class Dcard():
                     except:
                         text_update('下載圖片過程發生問題\n')
                     self.dcard_text.append(text)
-                    self.dcard_sentence_count += 1
                 else:
                     self.dcard_text.append(text)
-                    self.dcard_sentence_count += 1
+                self.dcard_sentence_count += 1
+
             if self.dcard_image_url_count > 9:
-                text_update('總共 %d 張圖片\n' % self.dcard_image_url_count)
+                text_update('總共 %s 張圖片\n' % str(self.dcard_image_url_count))
             else:
-                text_update('總共  %d 張圖片\n' % self.dcard_image_url_count)
+                text_update('總共  %s 張圖片\n' % str(self.dcard_image_url_count))
             text_update('圖片下載完成\n')
 
             # 下載dcard文章
@@ -84,18 +82,25 @@ class Dcard():
 
         # 將網址換成正確的格式
         if 'imgur.dcard.tw' in dcardimageurl:
-            dcardimageurl = dcardimageurl.replace('imgur.dcard.tw', 'i.imgur.com')
+            dcardimageurl = dcardimageurl.replace('imgur.dcard.tw',
+                                                  'i.imgur.com')
         elif 'megapx-assets.dcard.tw' in dcardimageurl:
             dcardimageurl = dcardimageurl.rsplit('/', 1)[0] + '/full.jpeg'
+        elif 'i.imgur.com' in dcardimageurl:
+            pass
+        else:
+            self.dcard_image_url_count -= 1
+            return
 
         filename = str(self.dcard_image_url_count) + '.jpg'
-        imgcontent = requests.get(dcardimageurl, headers=self.dcard_headers).content
+        imgcontent = requests.get(
+            dcardimageurl, headers=self.dcard_headers).content
         with open(self.dcard_title + '/' + filename, 'wb') as code:
             code.write(imgcontent)
             if self.dcard_image_url_count > 9:
-                text_update('第 %d 張圖片下載\n' % self.dcard_image_url_count)
+                text_update('第 %s 張圖片下載\n' % str(self.dcard_image_url_count))
             else:
-                text_update('第 %d 張圖片下載\n' % self.dcard_image_url_count)
+                text_update('第  %s 張圖片下載\n' % str(self.dcard_image_url_count))
 
     # 下載dcard文章
     def dcard_txt_download(self, url):
@@ -103,11 +108,11 @@ class Dcard():
         text_update('正在下載文章\n')
         filename = self.dcard_title + '.txt'
         with open(self.dcard_title + '/' + filename, 'a') as code:
-            for i in range(self.dcard_sentence_count - 1):
-                code.write(self.dcard_text[i].encode('utf-8', 'ignore'))
+            for i in range(self.dcard_sentence_count):
+                code.write(self.dcard_text[i])
                 code.write('\n')
             code.write('\n')
-            code.write("文章網址 :" + url.encode('utf-8', 'ignore'))
+            code.write("文章網址 : " + url)
         text_update('文章儲存完成\n')
         text_update('------------------------------\n')
 
@@ -146,10 +151,12 @@ class Ptt():
 
             # 修正文章名稱冒號問題
             if ': ' in self.ptt_information[2]:
-                self.ptt_information[2] = self.ptt_information[2].replace(': ', '-')
+                self.ptt_information[2] = self.ptt_information[2].replace(
+                    ': ', '-')
 
             # 避免標題重複，因此檔案名稱加上作者
-            self.ptt_information[2] = self.ptt_information[2] + '-' + self.ptt_information[0].split(' ')[0]
+            self.ptt_information[2] = self.ptt_information[
+                2] + '-' + self.ptt_information[0].split(' ')[0]
 
             # 製作資料夾
             mkdir(self.ptt_information[2])
@@ -254,10 +261,10 @@ class Ptt():
             try:
                 self.format_data.append('.jpg')
                 im = Image.open(
-                    self.ptt_information[2].encode('utf-8', 'ignore') + '/' +
+                    self.ptt_information[2] + '/' +
                     str(self.image_url_count) + '.jpg')
                 im.save(
-                    self.ptt_information[2].encode('utf-8', 'ignore') + '/' +
+                    self.ptt_information[2] + '/' +
                     str(self.image_url_count) + '.jpg', "JPEG")
             except IOError:
                 text_update('第 %d 張圖片下載失敗\n' % self.image_url_count)
@@ -266,10 +273,10 @@ class Ptt():
             try:
                 self.format_data.append('.png')
                 im = Image.open(
-                    self.ptt_information[2].encode('utf-8', 'ignore') + '/' +
+                    self.ptt_information[2] + '/' +
                     str(self.image_url_count) + '.png')
                 im.save(
-                    self.ptt_information[2].encode('utf-8', 'ignore') + '/' +
+                    self.ptt_information[2] + '/' +
                     str(self.image_url_count) + '.png', "PNG")
             except IOError:
                 text_update('第 %d 張圖片下載失敗\n' % self.image_url_count)
@@ -305,28 +312,6 @@ class Ptt():
         txt.add_paragraph(url + '\n')
         txt.save(self.ptt_information[2] + '.docx')
         text_update('文章下載完畢\n')
-        text_update('------------------------------\n')
-
-
-'''
-下載Youtube影片
-'''
-
-
-class Youtube():
-    def __init__(self, url):
-        self.__url = url
-
-    def download_video(self):
-        yt = pytube.YouTube(self.__url)
-        path = os.getcwd() + '/'
-        text_update('------------------------------\n')
-        text_update('開始下載影片\n')
-        dl = yt.streams.first()
-        dl.download(path)
-        text_update('影片標題: ')
-        text_update(yt.title + '\n')
-        text_update('影片下載完畢\n')
         text_update('------------------------------\n')
 
 
@@ -383,11 +368,11 @@ class Pixnet():
         r = requests.get(self.__url, headers=self.pixnet_headers)
 
         # 先 encode成 utf-8 的格式
-        r.encoding='utf-8'
+        r.encoding = 'utf-8'
 
         if r.status_code == requests.codes.ok:
             soup = BeautifulSoup(r.text, 'html.parser')
-            
+
             # 抓取文章標題並且修正
             title = soup.select('.title a')
             self.pixnet_title = title[0].contents[0] + '(Pixnet)'
@@ -397,7 +382,6 @@ class Pixnet():
                 self.pixnet_dir = pixnetdir + '/' + self.pixnet_title
             else:
                 self.pixnet_dir = self.pixnet_title
-
 
             # 創建資料夾
             mkdir(self.pixnet_dir)
@@ -438,7 +422,8 @@ class Pixnet():
         if 'https:' not in pixnetimageurl:
             pixnetimageurl = 'https:' + pixnetimageurl
         filename = str(self.pixnet_image_url_count) + pixnetimageurl[-4:]
-        imgcontent = requests.get(pixnetimageurl, headers=self.pixnet_headers).content
+        imgcontent = requests.get(
+            pixnetimageurl, headers=self.pixnet_headers).content
         with open(self.pixnet_dir + '/' + filename, 'wb') as code:
             code.write(imgcontent)
             if self.pixnet_image_url_count > 9:
@@ -453,13 +438,22 @@ class Pixnet():
         filename = self.pixnet_title + '.txt'
         with open(self.pixnet_dir + '/' + filename, 'a') as code:
             for i in range(self.pixnet_sentence_count):
-                code.write(self.pixnet_text[i].encode('utf-8', 'ignore'))
+                code.write(self.pixnet_text[i])
                 code.write('\n')
             code.write('\n')
-            code.write("文章網址 :" + url.encode('utf-8', 'ignore'))
+            code.write("文章網址 :" + url)
         text_update('文章儲存完成\n')
         text_update('------------------------------\n')
 
+# 檢查 titlename 有無超過 U+FFFF
+def check_title_name(titlename):
+    fix_titlename = ""
+    for i in range(len(titlename)):
+        if ord(titlename[i]) not in range(65536):
+            fix_titlename += '?'
+        else:
+            fix_titlename += titlename[i]
+    return fix_titlename
 
 # 建立資料夾
 def mkdir(titlename):
@@ -471,8 +465,7 @@ def mkdir(titlename):
     if not os.path.isdir(newpath):
         os.mkdir(newpath)
         text_update('------------------------------\n')
-        text_update('文章標題: ')
-        text_update(titlename.encode('utf-8', 'ignore'))
+        text_update('文章標題: %s' % check_title_name(titlename))
         text_update('\n------------------------------\n')
 
 
@@ -518,11 +511,11 @@ if __name__ == "__main__":
 
     # 彈出錯誤視窗
     def error_message():
-        tkMessageBox.showerror(title='Warning', message='輸入無效網址，請重新輸入。')
+        messagebox.showerror(title='Warning', message='輸入無效網址，請重新輸入。')
 
     # 彈出下載完成
     def finish_download():
-        tkMessageBox.showerror(title='Finish!!!!', message='下載完成！！！！！！！')
+        messagebox.showerror(title='Finish!!!!', message='下載完成！！！！！！！')
 
     # 主程式
     def run():
