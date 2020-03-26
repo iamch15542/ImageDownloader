@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #coding=utf-8
-#version: 6.2.0
+#version: 6.2.1
 import json
 import os
 import tkinter as tk
@@ -48,6 +48,18 @@ class Dcard():
             # 抓取文章標題
             self.dcard_title = dict_json['title']
 
+            # 檢查有無 / 存在
+            if '\\' in self.dcard_title:
+                tmp = []
+                for i in self.dcard_title.split('\\'):
+                    tmp.append(i)
+                self.dcard_title = '+'.join(tmp)
+            elif '/' in self.dcard_title:
+                tmp = []
+                for i in self.dcard_title.split('/'):
+                    tmp.append(i)
+                self.dcard_title = '+'.join(tmp)
+
             # 創建資料夾
             mkdir(self.dcard_title)
 
@@ -85,22 +97,49 @@ class Dcard():
             dcardimageurl = dcardimageurl.replace('imgur.dcard.tw',
                                                   'i.imgur.com')
         elif 'megapx-assets.dcard.tw' in dcardimageurl:
-            dcardimageurl = dcardimageurl.rsplit('/', 1)[0] + '/full.jpeg'
+            dcardimageurl_new = dcardimageurl.rsplit('/', 1)[0] + '/full.jpeg'
         elif 'i.imgur.com' in dcardimageurl:
-            pass
+            dcardimageurl_new = dcardimageurl
+        elif 'vivid/videos' in dcardimageurl:
+            self.dcard_video_download(dcardimageurl)
+            return
         else:
             self.dcard_image_url_count -= 1
             return
 
         filename = str(self.dcard_image_url_count) + '.jpg'
-        imgcontent = requests.get(
-            dcardimageurl, headers=self.dcard_headers).content
+        img = requests.get(
+            dcardimageurl_new, headers=self.dcard_headers)
+        imgcontent = img.content
+        if img.status_code != requests.codes.ok:
+            imgcontent = requests.get(
+                dcardimageurl, headers=self.dcard_headers).content
         with open(self.dcard_title + '/' + filename, 'wb') as code:
             code.write(imgcontent)
             if self.dcard_image_url_count > 9:
                 text_update('第 %s 張圖片下載\n' % str(self.dcard_image_url_count))
             else:
                 text_update('第  %s 張圖片下載\n' % str(self.dcard_image_url_count))
+
+    # 下載影片
+    def dcard_video_download(self, dcardimageurl):
+
+        filename = str(self.dcard_image_url_count) + '.mov'
+        try:
+            r = requests.get(
+                    dcardimageurl, headers=self.dcard_headers)
+            soup = BeautifulSoup(r.text, 'html.parser')
+            video_url = soup.select('source[src]')
+            video = requests.get(
+                video_url[0].get('src'), headers=self.dcard_headers)
+            with open(self.dcard_title + '/' + filename, 'wb') as code:
+                code.write(video.content)
+                if self.dcard_image_url_count > 9:
+                    text_update('第 %s 影片下載\n' % str(self.dcard_image_url_count))
+                else:
+                    text_update('第  %s 影片下載\n' % str(self.dcard_image_url_count))
+        except Exception as e:
+            print(e)
 
     # 下載dcard文章
     def dcard_txt_download(self, url):
