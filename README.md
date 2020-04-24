@@ -7,7 +7,7 @@
 3. 若要結束程式，```請輸入 'q' 再按開始下載```或是```直接點選結束程式```
 
 ## 版本
-Version 6.2.1
+Version 6.2.2
 
 ## 更新內容
 Version4.0.1: 新增 GUI 介面!!!
@@ -31,6 +31,8 @@ Version6.1.0: 改使用 Dcard api 下載文章
 Version6.2.0: 更改為 python3 以及修正 messagebox 顯示文字問題，移除下載 youtube 的功能
 
 Version6.2.1: 修正 Dcard 下載圖片、Dcard標題斜線問題，新增下載 Dcard 影片功能
+
+Version6.2.2: 修正小問題，PTT新增下載 gif 功能
 
 ## 注意事項
 1. 僅支援 PTT, Dcard, Instagram, Pixnet網址，其餘網址皆會視為無效網址

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #coding=utf-8
-#version: 6.2.1
+#version: 6.2.2
 import json
 import os
 import tkinter as tk
@@ -241,7 +241,8 @@ class Ptt():
             # 製作文件
             try:
                 self.ptt_word(self.url)
-            except:
+            except Exception as e:
+                print(e)
                 text_update('下載文章過程發生問題\n')
 
     # 確認imgur網址的格式
@@ -320,6 +321,8 @@ class Ptt():
             except IOError:
                 text_update('第 %d 張圖片下載失敗\n' % self.image_url_count)
                 self.image_url_count -= 1
+        elif '.gif' in imageurl:
+            self.format_data.append('.gif')
         else:
             text_update('第 %d 張圖片下載失敗\n' % self.image_url_count)
             self.image_url_count -= 1
