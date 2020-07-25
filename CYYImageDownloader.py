@@ -1,8 +1,8 @@
-#!/usr/bin/python3
 #coding=utf-8
-#version: 6.2.2
+#version: 6.3.0
 import json
 import os
+import re
 import tkinter as tk
 from tkinter import messagebox
 
@@ -25,7 +25,8 @@ class Dcard():
         self.dcard_text = []
         self.dcard_image_url_count = 0
         self.dcard_sentence_count = 0
-        self.dcard_title = ""
+        self.dcard_title = ''
+        self.dcard_fail_img_list = {}
         self.dcard_headers = {
             'user-agent':
             'Mozilla/5.0 (Macintosh Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
@@ -37,7 +38,7 @@ class Dcard():
         # 取得文章編號
         post_num = self.__url.rsplit('/', 1)[1]
 
-        # 利用官方 api 取得文章內容
+        # 利用官方 API 取得文章內容
         dcard_api_url = 'https://www.dcard.tw/_api/posts/' + post_num
 
         r = requests.get(dcard_api_url, headers=self.dcard_headers)
@@ -46,7 +47,13 @@ class Dcard():
         if r.status_code == requests.codes.ok:
 
             # 抓取文章標題
-            self.dcard_title = dict_json['title']
+            self.dcard_title = dict_json['title'] 
+
+            # 取得作者名稱
+            if dict_json['anonymousSchool'] == True:
+                self.dcard_title += '-匿名' 
+            else:
+                self.dcard_title += '-' + dict_json['school']
 
             # 檢查有無 / 存在
             if '\\' in self.dcard_title:
@@ -70,7 +77,9 @@ class Dcard():
                     self.dcard_image_url_count += 1
                     try:
                         self.dcard_image_download(text)
-                    except:
+                    except Exception as e:
+                        print(e)
+                        self.dcard_fail_img_list[str(self.dcard_image_url_count)] = text
                         text_update('下載圖片過程發生問題\n')
                     self.dcard_text.append(text)
                 else:
@@ -78,19 +87,81 @@ class Dcard():
                 self.dcard_sentence_count += 1
 
             if self.dcard_image_url_count > 9:
-                text_update('總共 %s 張圖片\n' % str(self.dcard_image_url_count))
+                text_update('文章總共 %s 張圖片\n' % str(self.dcard_image_url_count))
             else:
-                text_update('總共  %s 張圖片\n' % str(self.dcard_image_url_count))
-            text_update('圖片下載完成\n')
+                text_update('文章總共  %s 張圖片\n' % str(self.dcard_image_url_count))
+            text_update('文章圖片下載完成\n')
 
-            # 下載dcard文章
+            # 取得留言數量
+            commentcnt = dict_json['commentCount']
+            total_cnt = (commentcnt / 30) + 1
+
+            # API 一次是 30 筆，所以要回圈取得資訊
+            comments_img_cnt = 0
+            cycle_cnt = 0
+            while cycle_cnt < total_cnt:
+
+                # 利用官方 API 取得文章留言
+                if cycle_cnt == 0:
+                    comment_api_url = 'https://www.dcard.tw/_api/posts/' + post_num + '/comments'
+                else:
+                    comment_api_url = 'https://www.dcard.tw/_api/posts/' + post_num + '/comments' + '?after=' + str(cycle_cnt * 30)
+
+                r2 = requests.get(comment_api_url, headers=self.dcard_headers)
+                comment_json = r2.json()
+
+                if r2.status_code == requests.codes.ok:
+
+                    # 抓取文章留言及圖片網址
+                    for comments in comment_json:
+                        if comments['hiddenByAuthor'] == True:
+                            continue
+                        comments_time_hour = re.search('(.*)T(.*):(.*):(.*)', comments['updatedAt']).group(2)
+                        comments_time_minute = re.search('(.*)T(.*):(.*):(.*)', comments['updatedAt']).group(3)
+                        comments_time = str(int(comments_time_hour) + 8) + ':' + comments_time_minute
+                        comments_info = 'B' + str(comments['floor']) + ' - ' + comments['school'] + ' - ' + comments_time
+                        self.dcard_text.append('-------------------------')
+                        self.dcard_text.append(comments_info)
+                        self.dcard_sentence_count += 2
+                        list_comment = comments['content'].split('\n')
+                        for text in list_comment:
+                            if 'http' in text:
+                                self.dcard_image_url_count += 1
+                                comments_img_cnt += 1
+                                try:
+                                    self.dcard_image_download(text)
+                                except Exception as e:
+                                    print(e)
+                                    text_update('下載留言圖片過程發生問題\n')
+                                self.dcard_text.append(text)
+                            else:
+                                self.dcard_text.append(text)
+                            self.dcard_sentence_count += 1
+
+                # 完成一圈加一
+                cycle_cnt += 1
+            if comments_img_cnt > 9:
+                text_update('留言總共 %s 張圖片\n' % str(comments_img_cnt))
+            else:
+                text_update('留言總共  %s 張圖片\n' % str(comments_img_cnt))
+            text_update('留言圖片下載完成\n')
+
+            # 下載 Dcard 文章
             try:
                 self.dcard_txt_download(self.__url)
-            except:
+            except Exception as e:
+                print(e)
                 text_update('下載文章過程發生問題\n')
+
+            # 輸出失敗資訊
+            for key in self.dcard_fail_img_list:
+                print(key, '->', self.dcard_fail_img_list[key])
 
     # 下載圖片
     def dcard_image_download(self, dcardimageurl):
+
+        # 過濾掉跟網址黏在一起的字
+        dcardimageurl = 'http' + re.search('(.*)http(.*)', dcardimageurl).group(2)
 
         # 將網址換成正確的格式
         if 'imgur.dcard.tw' in dcardimageurl:

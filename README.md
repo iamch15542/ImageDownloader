@@ -34,6 +34,8 @@ Version6.2.1: 修正 Dcard 下載圖片、Dcard標題斜線問題，新增下載
 
 Version6.2.2: 修正小問題，PTT新增下載 gif 功能
 
+Version6.3.0: 新增下載 Dcard 留言功能，會連圖片一同下載
+
 ## 注意事項
 1. 僅支援 PTT, Dcard, Instagram, Pixnet網址，其餘網址皆會視為無效網址
 2. 目前無法下載gif圖片
