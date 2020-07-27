@@ -36,15 +36,17 @@ Version6.2.2: 修正小問題，PTT新增下載 gif 功能
 
 Version6.3.0: 新增下載 Dcard 留言功能，會連圖片一同下載
 
+Version6.3.1: 修正 Dcard 留言 bug
+
 ## 注意事項
-1. 僅支援 PTT, Dcard, Instagram, Pixnet網址，其餘網址皆會視為無效網址
-2. 目前無法下載gif圖片
+1. 僅支援 PTT, Dcard, Instagram, Pixnet 網址，其餘網址皆會視為無效網址
+2. 目前無法下載 gif 圖片
 3. 請勿拿來做非法事項
-4. 若有任何bug，歡迎告知
+4. 若有任何 bug，歡迎告知
 
 ## TODO List
-1. 下載gif圖片的功能
-2. 輸出不同的Error Code，來辨識出錯項目
+1. 下載 gif 圖片的功能
+2. 輸出不同的 Error Code，來辨識出錯項目
 
 ## 需求
 Python 3.7.0

@@ -1,5 +1,5 @@
 #coding=utf-8
-#version: 6.3.0
+#version: 6.3.1
 import json
 import os
 import re
@@ -119,7 +119,10 @@ class Dcard():
                         comments_time_hour = re.search('(.*)T(.*):(.*):(.*)', comments['updatedAt']).group(2)
                         comments_time_minute = re.search('(.*)T(.*):(.*):(.*)', comments['updatedAt']).group(3)
                         comments_time = str(int(comments_time_hour) + 8) + ':' + comments_time_minute
-                        comments_info = 'B' + str(comments['floor']) + ' - ' + comments['school'] + ' - ' + comments_time
+                        if comments['host'] == True:
+                            comments_info = 'B' + str(comments['floor']) + ' - 原PO - ' + comments_time
+                        else:
+                            comments_info = 'B' + str(comments['floor']) + ' - ' + comments['school'] + ' - ' + comments_time
                         self.dcard_text.append('-------------------------')
                         self.dcard_text.append(comments_info)
                         self.dcard_sentence_count += 2
