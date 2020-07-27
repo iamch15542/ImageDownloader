@@ -494,6 +494,12 @@ class Pixnet():
             self.pixnet_title = title[0].contents[0] + '(Pixnet)'
             # print(title[0].contents[0].encode('utf-8', 'ignore'))
 
+            if '/' in self.pixnet_title:
+                tmp = []
+                for i in self.pixnet_title.split('/'):
+                    tmp.append(i)
+                self.pixnet_title = '_'.join(tmp)
+
             if pixnetdir != '':
                 self.pixnet_dir = pixnetdir + '/' + self.pixnet_title
             else:
