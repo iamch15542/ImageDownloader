@@ -1,5 +1,5 @@
 #coding=utf-8
-#version: 6.3.1
+#version: 6.3.2
 import json
 import os
 import re
@@ -114,7 +114,7 @@ class Dcard():
 
                     # 抓取文章留言及圖片網址
                     for comments in comment_json:
-                        if comments['hiddenByAuthor'] == True:
+                        if comments['hiddenByAuthor'] == True or comments['hidden'] == True:
                             continue
                         comments_time_hour = re.search('(.*)T(.*):(.*):(.*)', comments['updatedAt']).group(2)
                         comments_time_minute = re.search('(.*)T(.*):(.*):(.*)', comments['updatedAt']).group(3)
