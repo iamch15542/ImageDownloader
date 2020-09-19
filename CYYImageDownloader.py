@@ -1,8 +1,9 @@
 #coding=utf-8
-#version: 6.3.2
+#version: 6.3.3
 import json
 import os
 import re
+import imghdr
 import tkinter as tk
 from tkinter import messagebox
 
@@ -290,6 +291,11 @@ class Ptt():
                         self.image_download(s.text)
                     except:
                         text_update('下載圖片過程發生問題\n')
+                elif 'imgur.com/a/' in s.text:
+                    try:
+                        self.imgur_album_url(s.text, True)
+                    except:
+                        text_update('下載圖片過程發生問題\n')
                 elif 'imgur' in s.text:
                     self.image_url_count += 1
                     try:
@@ -338,27 +344,58 @@ class Ptt():
             # 網址沒有 JPG 或是 PNG ，則要進入網頁搜尋正確的網址
             if model == 0:
 
-                imgur = requests.get(checkurl)
+                imgur = requests.get(checkurl + '.jpg')
 
                 # 確認是否下載成功
                 if imgur.status_code == requests.codes.ok:
 
-                    # 以 BeautifulSoup 解析 HTML 程式碼
-                    soup = BeautifulSoup(imgur.text, 'html.parser')
-
-                    # 抓出正確的網址
-                    urldata = soup.find("meta", property='og:image')
-                    for a in urldata['content'].split('?'):
-                        checkurl = a
-                        break
+                    # 判斷圖片類型
+                    typeofpic = imghdr.what(None, imgur.content)
+                    imgur.url = imgur.url[:-3] + typeofpic
+                    # print(imgur.url, typeofpic)
+                    return imgur.url
         # 回傳正確網址
         return checkurl
 
-    # ptt圖片下載
+    # 確認 imgur album 網址下載
+    def imgur_album_url(self, checkurl, download=False):
+        checkurl += '/layout/blog'
+        imgur = requests.get(checkurl)
+        imgur_list = []
+        # 確認是否下載成功
+        if imgur.status_code == requests.codes.ok:
+            # 抓出正確的網址
+            try:
+                image_hash = re.findall('{"hash":"([a-zA-Z0-9]+)".*?"ext":"(\.[a-zA-Z0-9]+)".*?', imgur.text)
+            except Exception as e:
+                print(e)
+            
+            for url in image_hash:
+                new_url = 'https://i.imgur.com/' + url[0] + url[1]
+                if new_url not in imgur_list:
+                    imgur_list.append(new_url)
+            if download:
+                for url in imgur_list:
+                    self.image_url_count += 1
+                    filename = str(self.image_url_count) + url[-4:]
+                    imgcontent = requests.get(url).content
+                    try:
+                        with open(self.ptt_information[2] + '/' + filename, 'wb') as code:
+                            code.write(imgcontent)
+                            if self.image_url_count > 9:
+                                text_update('第 %d 張圖片下載\n' % self.image_url_count)
+                            else:
+                                text_update('第  %d 張圖片下載\n' % self.image_url_count)
+                        self.format_data.append(url[-4:])
+                    except:
+                        self.image_url_count -= 1
+            else:
+                return imgur_list
+
+    # ptt 圖片下載
     def image_download(self, imageurl):
         if 'imgur' in imageurl:
             imageurl = self.double_check_imgur(imageurl)
-
         else:
             pass
 
@@ -371,35 +408,16 @@ class Ptt():
             else:
                 text_update('第  %d 張圖片下載\n' % self.image_url_count)
 
-        if '.jpg' in imageurl:
-            try:
-                self.format_data.append('.jpg')
-                im = Image.open(
-                    self.ptt_information[2] + '/' +
-                    str(self.image_url_count) + '.jpg')
-                im.save(
-                    self.ptt_information[2] + '/' +
-                    str(self.image_url_count) + '.jpg', "JPEG")
-            except IOError:
-                text_update('第 %d 張圖片下載失敗\n' % self.image_url_count)
-                self.image_url_count -= 1
-        elif '.png' in imageurl:
-            try:
-                self.format_data.append('.png')
-                im = Image.open(
-                    self.ptt_information[2] + '/' +
-                    str(self.image_url_count) + '.png')
-                im.save(
-                    self.ptt_information[2] + '/' +
-                    str(self.image_url_count) + '.png', "PNG")
-            except IOError:
-                text_update('第 %d 張圖片下載失敗\n' % self.image_url_count)
-                self.image_url_count -= 1
-        elif '.gif' in imageurl:
-            self.format_data.append('.gif')
-        else:
+        try:
+            self.format_data.append(imageurl[-4:])
+        except IOError as e:
             text_update('第 %d 張圖片下載失敗\n' % self.image_url_count)
             self.image_url_count -= 1
+            print(e)
+        except Exception as e:
+            text_update('第 %d 張圖片下載失敗\n' % self.image_url_count)
+            self.image_url_count -= 1
+            print(e)
 
     # 製作Word文檔
     def ptt_word(self, url):
@@ -413,6 +431,14 @@ class Ptt():
             if num <= self.image_url_count:
                 str1 = self.ptt_information[2] + '/' + str(
                     num) + self.format_data[num - 1]
+                if 'imgur.com/a/' in self.txt_data[i]:
+                    filter_url = re.findall('[a-zA-z]+://[^\s]*', self.txt_data[i])
+                    imgur_list = self.imgur_album_url(filter_url[0])
+                    for url in imgur_list:
+                        str1 = self.ptt_information[2] + '/' + str(num) + self.format_data[num - 1]
+                        txt.add_picture(str1, width=Inches(3))
+                        num += 1
+                    continue
                 if 'https' in self.txt_data[i]:
                     txt.add_picture(str1, width=Inches(3))
                     num += 1
