@@ -38,6 +38,10 @@ Version6.3.0: 新增下載 Dcard 留言功能，會連圖片一同下載
 
 Version6.3.1: 修正 Dcard 留言 bug, 修正 pixnet 檔名錯誤問題
 
+Version6.3.2: 修正 imgur 圖片下載
+
+Version6.3.3: 使用 imghdr 判斷圖片類型，修正小問題
+
 ## 注意事項
 1. 僅支援 PTT, Dcard, Instagram, Pixnet 網址，其餘網址皆會視為無效網址
 2. 目前無法下載 gif 圖片
