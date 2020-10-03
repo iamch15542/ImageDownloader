@@ -42,6 +42,8 @@ Version6.3.2: 修正 imgur 圖片下載
 
 Version6.3.3: 使用 imghdr 判斷圖片類型，修正小問題
 
+Version6.3.4: 修正圖片下載問題
+
 ## 注意事項
 1. 僅支援 PTT, Dcard, Instagram, Pixnet 網址，其餘網址皆會視為無效網址
 2. 目前無法下載 gif 圖片
@@ -58,3 +60,6 @@ Python 3.7.0
 ## 免責聲明
 此程式為本人寫來自用的，若有發生任何問題，本人一概不負責
 
+## 參考
+[Imgur album 正則表達式](https://github.com/alexgisby/imgur-album-downloader/blob/master/imguralbum.py)
+[使用 imghdr 判斷圖片](https://docs.python.org/3/library/imghdr.html)

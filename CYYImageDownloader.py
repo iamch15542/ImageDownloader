@@ -1,5 +1,5 @@
 #coding=utf-8
-#version: 6.3.3
+#version: 6.3.4
 import json
 import os
 import re
@@ -325,35 +325,34 @@ class Ptt():
                 print(e)
                 text_update('下載文章過程發生問題\n')
 
+    # 印出錯誤 number
+    def print_info(self, cnt):
+        if cnt > 9:
+            text_update('第 %d 張圖片下載\n' % cnt)
+        else:
+            text_update('第  %d 張圖片下載\n' % cnt)
+
     # 確認imgur網址的格式
     def double_check_imgur(self, checkurl):
         model = 0
-        if 'i.imgur' not in checkurl:
 
-            # 如果網址結尾有 JPG 或是 PNG 的話，則可以直接通過確認
-            if 'jpg' in checkurl:
-                model = 1
+        # 如果網址結尾有 JPG 或是 PNG 的話，則可以直接通過確認
+        if 'jpg' in checkurl:
+            checkurl = re.search('(.*).jpg', checkurl).group(1) + '.jpg'
+        elif 'png' in checkurl:
+            checkurl = re.search('(.*).png', checkurl).group(1) + '.png'
+        elif 'imgur.dcard.tw' in checkurl:
+            checkurl = checkurl.replace('imgur.dcard.tw', 'i.imgur.com')
+        elif 'i.imgur' not in checkurl:
+            imgur = requests.get(checkurl + '.jpg')
 
-            if 'png' in checkurl:
-                model = 1
+            # 確認是否下載成功
+            if imgur.status_code == requests.codes.ok:
 
-            if 'imgur.dcard.tw' in checkurl:
-                checkurl = checkurl.replace('imgur.dcard.tw', 'i.imgur.com')
-                model = 1
+                # 判斷圖片類型
+                typeofpic = imghdr.what(None, imgur.content)
+                checkurl = imgur.url[:-3] + typeofpic
 
-            # 網址沒有 JPG 或是 PNG ，則要進入網頁搜尋正確的網址
-            if model == 0:
-
-                imgur = requests.get(checkurl + '.jpg')
-
-                # 確認是否下載成功
-                if imgur.status_code == requests.codes.ok:
-
-                    # 判斷圖片類型
-                    typeofpic = imghdr.what(None, imgur.content)
-                    imgur.url = imgur.url[:-3] + typeofpic
-                    # print(imgur.url, typeofpic)
-                    return imgur.url
         # 回傳正確網址
         return checkurl
 
@@ -382,10 +381,7 @@ class Ptt():
                     try:
                         with open(self.ptt_information[2] + '/' + filename, 'wb') as code:
                             code.write(imgcontent)
-                            if self.image_url_count > 9:
-                                text_update('第 %d 張圖片下載\n' % self.image_url_count)
-                            else:
-                                text_update('第  %d 張圖片下載\n' % self.image_url_count)
+                            self.print_info(self.image_url_count)
                         self.format_data.append(url[-4:])
                     except:
                         self.image_url_count -= 1
@@ -403,13 +399,18 @@ class Ptt():
         imgcontent = requests.get(imageurl).content
         with open(self.ptt_information[2] + '/' + filename, 'wb') as code:
             code.write(imgcontent)
-            if self.image_url_count > 9:
-                text_update('第 %d 張圖片下載\n' % self.image_url_count)
-            else:
-                text_update('第  %d 張圖片下載\n' % self.image_url_count)
+            self.print_info(self.image_url_count)
 
         try:
             self.format_data.append(imageurl[-4:])
+            typeofpic = imghdr.what(self.ptt_information[2] + '/' + filename)
+            if typeofpic == None:
+                im = Image.open(self.ptt_information[2] + '/' + filename)
+                if imageurl[-4:] == '.jpg':
+                    im.save(self.ptt_information[2] + '/' + filename, "JPEG")
+                elif imageurl[-4:] == '.png':
+                    im.save(self.ptt_information[2] + '/' + filename, "PNG")
+                im.close()
         except IOError as e:
             text_update('第 %d 張圖片下載失敗\n' % self.image_url_count)
             self.image_url_count -= 1
