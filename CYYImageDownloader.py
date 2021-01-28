@@ -351,8 +351,10 @@ class Ptt():
 
                 # 判斷圖片類型
                 typeofpic = imghdr.what(None, imgur.content)
-                checkurl = imgur.url[:-3] + typeofpic
-
+                if typeofpic == None:
+                    checkurl = imgur.url
+                else:
+                    checkurl = imgur.url[:-3] + typeofpic
         # 回傳正確網址
         return checkurl
 
