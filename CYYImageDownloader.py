@@ -1,6 +1,7 @@
 #coding=utf-8
 #version: 6.3.4
 import json
+import sys
 import os
 import re
 import imghdr
@@ -439,8 +440,13 @@ class Ptt():
                     imgur_list = self.imgur_album_url(filter_url[0])
                     for url in imgur_list:
                         str1 = self.ptt_information[2] + '/' + str(num) + self.format_data[num - 1]
-                        txt.add_picture(str1, width=Inches(3))
-                        num += 1
+                        try:
+                            txt.add_picture(str1, width=Inches(3))
+                        except:
+                            print("Can't add pic, so add url: ", url)
+                            txt.add_paragraph(url)
+                        finally:
+                            num += 1
                     continue
                 if 'https' in self.txt_data[i]:
                     txt.add_picture(str1, width=Inches(3))
