@@ -70,7 +70,13 @@ class Dcard():
                 self.dcard_title = '+'.join(tmp)
 
             # 創建資料夾
-            mkdir(self.dcard_title)
+            try:
+                mkdir(self.dcard_title)
+            except OSError as e:
+                print(e)
+                print('Filename have some problem, You should change by yourself')
+                self.dcard_title = 'tmp_dcard_file_name'
+                mkdir(self.dcard_title)
 
             # 抓取文章內容及圖片網址
             list_text = dict_json['content'].split('\n')
