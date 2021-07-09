@@ -1,5 +1,5 @@
 #coding=utf-8
-#version: 6.3.4
+#version: 7.0.1
 import json
 import sys
 import os
@@ -455,11 +455,19 @@ class Ptt():
                             num += 1
                     continue
                 if 'https' in self.txt_data[i]:
-                    txt.add_picture(str1, width=Inches(3))
+                    try:
+                        txt.add_picture(str1, width=Inches(3))
+                    except:
+                        print("Can't add pic, so add url: ", self.txt_data[i])
+                        txt.add_paragraph(self.txt_data[i])
                     num += 1
                     continue
                 if 'http' in self.txt_data[i]:
-                    txt.add_picture(str1, width=Inches(3))
+                    try:
+                        txt.add_picture(str1, width=Inches(3))
+                    except:
+                        print("Can't add pic, so add url: ", self.txt_data[i])
+                        txt.add_paragraph(self.txt_data[i])
                     num += 1
                     continue
             txt.add_paragraph(self.txt_data[i])
@@ -480,27 +488,91 @@ class Ptt():
 class Instagram():
     def __init__(self, url):
         self.__url = url
+        self.__headers = {
+            'user-agent':
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.59'
+        }
+        self.__url_list = []
+        self.__video = []
+        self.__ins_title = ''
+        self.__text = ''
+        self.__image_author_fullname = ''
 
-    def analysis_ig(self):
-        r = requests.get(self.__url)
+    def analysis_ins(self):
+        
+        r = requests.get(self.__url + '?__a=1', headers=self.__headers)
         if r.status_code == requests.codes.ok:
 
-            soup = BeautifulSoup(r.text, 'html.parser')
-            getjson = soup.find_all("script", type="text/javascript")[3].string
+            # Get Data
+            data = json.loads(r.text)
 
-            getjson = getjson[getjson.find('=') + 2:-1]
-            data = json.loads(getjson)
-            image_url = data['entry_data']['PostPage'][0]['graphql'][
-                'shortcode_media']['display_url']
-            text_update('------------------------------\n')
-            text_update('開始下載圖片\n')
-            filename = str(1) + '.jpg'
-            imgcontent = requests.get(image_url).content
-            with open(filename, 'wb') as code:
-                code.write(imgcontent)
-            text_update('圖片下載完畢\n')
+            # Title
+            # self.__ins_title = re.search('https://www.instagram.com/p/(.*)/', self.__url).group(1)
+            short_code = data['graphql']['shortcode_media']['shortcode']
+            author_name = data['graphql']['shortcode_media']['owner']['username']
+            self.__image_author_fullname = data['graphql']['shortcode_media']['owner']['full_name']
+            self.__ins_title = short_code + '_' + author_name
+
+            # Create folder
+            try:
+                mkdir(self.__ins_title)
+            except OSError as e:
+                print(e)
+                print('Filename have some problem, You should change by yourself')
+                self.__ins_title = 'tmp_ins_file_name'
+                mkdir(self.__ins_title)
+
+            data = json.loads(r.text)
+            if 'edge_sidecar_to_children' in data['graphql']['shortcode_media']:
+                image_url = data['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']  # data['entry_data']['PostPage'][0]['graphql']['shortcode_media']
+                for image in image_url:
+                    if image['node']['is_video'] == True:
+                        self.__url_list.append(image['node']['video_url'])
+                        self.__video.append(True)
+                    else:
+                        self.__url_list.append(image['node']['display_url'])
+                        self.__video.append(False)
+            else:
+                image = data['graphql']['shortcode_media']
+                if image['is_video'] == True:
+                    self.__url_list.append(image['video_url'])
+                    self.__video.append(True)
+                else:
+                    self.__url_list.append(image['display_url'])
+                    self.__video.append(False)
+            
+            # Download Image or Video
+            text_update('開始下載圖片和影片\n')
+            for idx in range(len(self.__url_list)):
+                filename = self.__ins_title + '/'
+                filename += str(idx + 1) + '.mp4' if self.__video[idx] == True else str(idx + 1) + '.jpg'
+                pic = '影片' if self.__video[idx] == True else '圖片'
+                try:
+                    imgcontent = requests.get(self.__url_list[idx]).content
+                    with open(filename, 'wb') as code:
+                        code.write(imgcontent)
+                    text_update('第 %d 張%s下載\n' % (idx + 1, pic))
+                except Exception as e:
+                    text_update('第 %d 張%s下載失敗\n' % (idx + 1, pic))
+                    print(e)
+            text_update('下載完畢\n')
             text_update('------------------------------\n')
 
+            self.__text = data['graphql']['shortcode_media']['edge_media_to_caption']['edges'][0]['node']['text']
+            self.ins_txt_download(self.__url)
+
+    def ins_txt_download(self, url):
+        text_update('正在下載文章\n')
+        filename = self.__ins_title + '.txt'
+        with open(self.__ins_title + '/' + filename, 'a') as code:
+            code.write(self.__text)
+            code.write('\n')
+            code.write('文章網址: ' + url)
+            code.write('\n')
+            code.write('圖片上傳者: ' + self.__image_author_fullname)
+            code.write('\n')
+        text_update('文章儲存完成\n')
+        text_update('------------------------------\n')
 
 '''
 下載 Pixnet 文章以及圖片
@@ -704,7 +776,7 @@ if __name__ == "__main__":
         elif 'instagram' in url:
             state = 1
             ig = Instagram(url)
-            ig.analysis_ig()
+            ig.analysis_ins()
             finish_download()
         elif 'pixnet' in url:
             state = 1

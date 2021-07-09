@@ -6,8 +6,19 @@
 2. 開啟後直接輸入網址即可
 3. 若要結束程式，```請輸入 'q' 再按開始下載```或是```直接點選結束程式```
 
+## 輸入網址範例
+* PTT
+   * 文章網址即可
+	* https://www.ptt.cc/bbs/Beauty/M.1625575802.A.266.html
+* Dcard
+	* 文章網址即可
+	* https://www.dcard.tw/f/relationship/p/236435574
+* Instagram
+	* 要用 Post 的網址才行，會是 `https://www.instagram.com/p/????????/` 這樣
+	* EX: https://www.instagram.com/p/CQ5l1VWMJEd/
+
 ## 版本
-Version 6.2.2
+Version 7.0.1
 
 ## 更新內容
 Version4.0.1: 新增 GUI 介面!!!
@@ -32,7 +43,7 @@ Version6.2.0: 更改為 python3 以及修正 messagebox 顯示文字問題，移
 
 Version6.2.1: 修正 Dcard 下載圖片、Dcard標題斜線問題，新增下載 Dcard 影片功能
 
-Version6.2.2: 修正小問題，PTT新增下載 gif 功能
+Version6.2.2: 修正小問題，Ptt 新增下載 gif 功能
 
 Version6.3.0: 新增下載 Dcard 留言功能，會連圖片一同下載
 
@@ -44,18 +55,25 @@ Version6.3.3: 使用 imghdr 判斷圖片類型，修正小問題
 
 Version6.3.4: 修正圖片下載問題
 
+Version7.0.1: 修復 Instagram 下載問題, Ptt word 輸出錯誤
+
+
 ## 注意事項
 1. 僅支援 PTT, Dcard, Instagram, Pixnet 網址，其餘網址皆會視為無效網址
-2. 目前無法下載 gif 圖片
-3. 請勿拿來做非法事項
-4. 若有任何 bug，歡迎告知
+2. 請勿拿來做非法事項
+3. 若有任何 bug，歡迎告知
 
 ## TODO List
 1. 下載 gif 圖片的功能
 2. 輸出不同的 Error Code，來辨識出錯項目
 
 ## 需求
-Python 3.7.0
+* 以下為我使用的 package 的版本
+	* Python 3.7.6
+	* python-docx: 0.8.10
+	* bs4: 0.0.1
+	* requests: 2.23.0
+	* Pillow: 6.1.0
 
 ## 免責聲明
 此程式為本人寫來自用的，若有發生任何問題，本人一概不負責
