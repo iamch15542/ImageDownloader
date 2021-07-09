@@ -21,32 +21,6 @@
 Version 7.0.1
 
 ## 更新內容
-Version4.0.1: 新增 GUI 介面!!!
-
-Version4.1.1: 改成 class 結構
-
-Version5.0.0: 新增下載 youtube 的功能
-
-Version5.1.0: 新增下載 ig 圖片功能
-
-Version5.1.1: 修正無法下載圖片的問題
-
-Version5.1.2: 修正下載 Dcard 圖片問題
-
-Version5.1.4: 新增下載 pixnet 的功能
-
-Version6.0.0: 修正下載 Dcard 頁面問題
-
-Version6.1.0: 改使用 Dcard api 下載文章
-
-Version6.2.0: 更改為 python3 以及修正 messagebox 顯示文字問題，移除下載 youtube 的功能
-
-Version6.2.1: 修正 Dcard 下載圖片、Dcard標題斜線問題，新增下載 Dcard 影片功能
-
-Version6.2.2: 修正小問題，Ptt 新增下載 gif 功能
-
-Version6.3.0: 新增下載 Dcard 留言功能，會連圖片一同下載
-
 Version6.3.1: 修正 Dcard 留言 bug, 修正 pixnet 檔名錯誤問題
 
 Version6.3.2: 修正 imgur 圖片下載
