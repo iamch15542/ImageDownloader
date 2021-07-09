@@ -74,6 +74,7 @@ Version7.0.1: 修復 Instagram 下載問題, Ptt word 輸出錯誤
 	* bs4: 0.0.1
 	* requests: 2.23.0
 	* Pillow: 6.1.0
+	* beautifulsoup4: 4.6.3
 
 ## 免責聲明
 此程式為本人寫來自用的，若有發生任何問題，本人一概不負責
