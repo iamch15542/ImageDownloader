@@ -31,7 +31,7 @@ class Dcard():
         self.dcard_fail_img_list = {}
         self.dcard_headers = {
             'user-agent':
-            'Mozilla/5.0 (Macintosh Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.59'
         }
 
     # 分析dcard文章網址
@@ -44,9 +44,10 @@ class Dcard():
         dcard_api_url = 'https://www.dcard.tw/_api/posts/' + post_num
 
         r = requests.get(dcard_api_url, headers=self.dcard_headers)
-        dict_json = r.json()
 
         if r.status_code == requests.codes.ok:
+
+            dict_json = r.json()
 
             # 抓取文章標題
             self.dcard_title = dict_json['title'] 
@@ -167,6 +168,8 @@ class Dcard():
             # 輸出失敗資訊
             for key in self.dcard_fail_img_list:
                 print(key, '->', self.dcard_fail_img_list[key])
+        else:
+            print(r.status_code)
 
     # 下載圖片
     def dcard_image_download(self, dcardimageurl):
