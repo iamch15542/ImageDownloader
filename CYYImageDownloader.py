@@ -7,6 +7,7 @@ import re
 import imghdr
 import tkinter as tk
 from tkinter import messagebox
+from time import sleep
 
 import docx
 import requests
@@ -117,9 +118,10 @@ class Dcard():
                     comment_api_url = 'https://www.dcard.tw/_api/posts/' + post_num + '/comments' + '?after=' + str(cycle_cnt * 30)
 
                 r2 = requests.get(comment_api_url, headers=self.dcard_headers)
-                comment_json = r2.json()
 
                 if r2.status_code == requests.codes.ok:
+
+                    comment_json = r2.json()
 
                     # 抓取文章留言及圖片網址
                     for comments in comment_json:
@@ -149,7 +151,10 @@ class Dcard():
                             else:
                                 self.dcard_text.append(text)
                             self.dcard_sentence_count += 1
-
+                else:
+                    print('Have some Error')
+                    sleep(0.1)
+                    continue
                 # 完成一圈加一
                 cycle_cnt += 1
             if comments_img_cnt > 9:
@@ -456,23 +461,27 @@ class Ptt():
                             txt.add_paragraph(url)
                         finally:
                             num += 1
-                    continue
-                if 'https' in self.txt_data[i]:
+                elif 'imgur' in self.txt_data[i]:
                     try:
                         txt.add_picture(str1, width=Inches(3))
                     except:
                         print("Can't add pic, so add url: ", self.txt_data[i])
                         txt.add_paragraph(self.txt_data[i])
                     num += 1
-                    continue
-                if 'http' in self.txt_data[i]:
+                elif 'jpg' in self.txt_data[i]:
                     try:
                         txt.add_picture(str1, width=Inches(3))
                     except:
                         print("Can't add pic, so add url: ", self.txt_data[i])
                         txt.add_paragraph(self.txt_data[i])
                     num += 1
-                    continue
+                elif 'png' in self.txt_data[i]:
+                    try:
+                        txt.add_picture(str1, width=Inches(3))
+                    except:
+                        print("Can't add pic, so add url: ", self.txt_data[i])
+                        txt.add_paragraph(self.txt_data[i])
+                    num += 1
             txt.add_paragraph(self.txt_data[i])
 
         txt.add_paragraph(u'\n網友' + self.ptt_information[0] + u'分享於' +
