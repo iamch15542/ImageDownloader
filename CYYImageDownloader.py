@@ -287,6 +287,9 @@ class Ptt():
             self.ptt_information[2] = self.ptt_information[
                 2] + '-' + self.ptt_information[0].split(' ')[0]
 
+            # 過濾掉暱稱
+            self.ptt_information[0] = self.ptt_information[0].split(' ')[0]
+
             # 製作資料夾
             mkdir(self.ptt_information[2])
 
