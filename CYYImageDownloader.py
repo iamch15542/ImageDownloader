@@ -109,6 +109,7 @@ class Dcard():
             # API 一次是 30 筆，所以要回圈取得資訊
             comments_img_cnt = 0
             cycle_cnt = 0
+            error_cnt = 0
             while cycle_cnt < total_cnt:
 
                 # 利用官方 API 取得文章留言
@@ -153,6 +154,10 @@ class Dcard():
                             self.dcard_sentence_count += 1
                 else:
                     print('Have some Error')
+                    error_cnt += 1
+                    if error_cnt > 100:
+                        print('Too much Error, so only save article and pic')
+                        break
                     sleep(0.1)
                     continue
                 # 完成一圈加一
